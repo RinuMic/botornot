@@ -16,7 +16,7 @@ import joblib
 
 def main():
     # Load the data
-    df = pd.read_csv('data/clickdata.csv')
+    df = pd.read_csv('../data/clickdata.csv')
 
     # Initial exploration
     print(df.info())
@@ -72,63 +72,67 @@ def main():
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
 
-    # # Define classifiers and hyperparameter grids
-    # classifiers = {
-    #     'RandomForest': RandomForestClassifier(random_state=42),
-    #     'GradientBoosting': GradientBoostingClassifier(random_state=42),
-    #     'XGB': XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', random_state=42)
-    # }
+    # Define classifiers and hyperparameter grids
+    classifiers = {
+        'RandomForest': RandomForestClassifier(random_state=42),
+        'GradientBoosting': GradientBoostingClassifier(random_state=42),
+        'XGB': XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', random_state=42)
+    }
 
-    # param_grids = {
-    #     'RandomForest': {
-    #         'n_estimators': [100, 200],
-    #         'max_depth': [10, 20],
-    #         'min_samples_split': [2, 5]
-    #     },
-    #     'GradientBoosting': {
-    #         'n_estimators': [100, 200],
-    #         'learning_rate': [0.01, 0.1],
-    #         'max_depth': [3, 5]
-    #     },
-    #     'XGB': {
-    #         'n_estimators': [100, 200],
-    #         'learning_rate': [0.01, 0.1],
-    #         'max_depth': [3, 5]
-    #     }
-    # }
+    param_grids = {
+        'RandomForest': {
+            'n_estimators': [100, 200],
+            'max_depth': [10, 20],
+            'min_samples_split': [2, 5]
+        },
+        'GradientBoosting': {
+            'n_estimators': [100, 200],
+            'learning_rate': [0.01, 0.1],
+            'max_depth': [3, 5]
+        },
+        'XGB': {
+            'n_estimators': [100, 200],
+            'learning_rate': [0.01, 0.1],
+            'max_depth': [3, 5]
+        }
+    }
 
-    # # Grid search for each classifier
-    # best_estimators = {}
-    # for clf_name in classifiers:
-    #     print(f"Running Grid Search for {clf_name}...")
-    #     grid_search = GridSearchCV(estimator=classifiers[clf_name], param_grid=param_grids[clf_name], cv=3, n_jobs=-1, verbose=2)
-    #     grid_search.fit(X_train, y_train)
-    #     best_estimators[clf_name] = grid_search.best_estimator_
-    #     print(f"Best Parameters for {clf_name}: {grid_search.best_params_}")
+    # Grid search for each classifier
+    best_estimators = {}
+    for clf_name in classifiers:
+        print(f"Running Grid Search for {clf_name}...")
+        grid_search = GridSearchCV(estimator=classifiers[clf_name], param_grid=param_grids[clf_name], cv=3, n_jobs=-1, verbose=2)
+        grid_search.fit(X_train, y_train)
+        best_estimators[clf_name] = grid_search.best_estimator_
+        print(f"Best Parameters for {clf_name}: {grid_search.best_params_}")
 
-    # # Save the best model
-    # best_model_name = 'models/best_model.pkl'
-    # best_model = best_estimators['XGB']  # Change this to whichever model you want to save
+    # Save the best model
+    best_model_name = '../models/best_model.pkl'
+    
+    best_model = best_estimators['XGB']  # Change this to whichever model you want to save
     # joblib.dump(best_model, best_model_name)
-    # print(f"Best model saved as {best_model_name}")
+    # Save the model and encoders
+    joblib.dump((best_model, scaler, le_target, X.columns.tolist()), best_model_name)
 
-    # # Evaluate each best model
-    # for clf_name, clf in best_estimators.items():
-    #     print(f"\nEvaluating {clf_name}...")
-    #     y_pred = clf.predict(X_test)
+    print(f"Best model saved as {best_model_name}")
+
+    # Evaluate each best model
+    for clf_name, clf in best_estimators.items():
+        print(f"\nEvaluating {clf_name}...")
+        y_pred = clf.predict(X_test)
         
-    #     print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
-    #     print("Classification Report:\n", classification_report(y_test, y_pred))
+        print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+        print("Classification Report:\n", classification_report(y_test, y_pred))
         
-    #     accuracy = accuracy_score(y_test, y_pred)
-    #     precision = precision_score(y_test, y_pred, average='weighted')
-    #     recall = recall_score(y_test, y_pred, average='weighted')
-    #     f1 = f1_score(y_test, y_pred, average='weighted')
+        accuracy = accuracy_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred, average='weighted')
+        recall = recall_score(y_test, y_pred, average='weighted')
+        f1 = f1_score(y_test, y_pred, average='weighted')
         
-    #     print(f"Accuracy: {accuracy:.4f}")
-    #     print(f"Precision: {precision:.4f}")
-    #     print(f"Recall: {recall:.4f}")
-    #     print(f"F1 Score: {f1:.4f}")
+        print(f"Accuracy: {accuracy:.4f}")
+        print(f"Precision: {precision:.4f}")
+        print(f"Recall: {recall:.4f}")
+        print(f"F1 Score: {f1:.4f}")
 
 
 if __name__ == "__main__":
