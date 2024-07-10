@@ -1,8 +1,6 @@
 # Importing necessary Libraries
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
@@ -34,6 +32,19 @@ def initial_exploration(df):
         print(values)
         print()
 
+def determine_url_type(url):
+    if '/p/' in url:
+        return 'product'
+    elif '/l/' in url:
+        return 'category'
+    else:
+        return 'other'
+
+def encode_recognition_type(type):
+    encoding_map = {'': 0, 'ANONYMOUS': 1, 'LOGGEDIN': 2, 'RECOGNIZED': 3}
+    return encoding_map.get(type, -1)  # Handle unexpected values gracefully
+
+
 def data_cleaning(df):
     """
     Perform data cleaning on the dataframe.
@@ -44,18 +55,21 @@ def data_cleaning(df):
     Returns:
         pd.DataFrame: Cleaned dataframe.
     """
+    
+    # Apply preprocessing on the data
     df = df.replace(np.nan, '', regex=True)
     df = df.replace('Unknown', '', regex=True)
 
+    # Reduce the amount of detail in classes by merging all different Human types
     df['ua_agent_class'] = df['ua_agent_class'].str.replace('Browser Webview', 'Browser')
     df['ua_agent_class'] = df['ua_agent_class'].str.replace('Robot Mobile', 'Robot')
     print(df['ua_agent_class'].unique())
 
+    # Feature engineering  
     df['url_length'] = df['url_without_parameters'].apply(lambda url: len(url))
-    df['url_type'] = df['url_without_parameters'].apply(lambda url: 'product' if '/p/' in url else ('category' if '/l/' in url else 'other'))
+    df['url_type'] = df['url_without_parameters'].apply(determine_url_type)
     df['referrer_present'] = df['referrer_without_parameters'].apply(lambda ref: 0 if pd.isnull(ref) or ref == '' else 1)
-    df['visitor_recognition_type_encoded'] = df['visitor_recognition_type'].map({'': 0, 'ANONYMOUS': 1, 'LOGGEDIN': 2, 'RECOGNIZED': 3})
-    df['referrer_present'] = df['referrer_without_parameters'].apply(lambda ref: 0 if pd.isnull(ref) or ref == '' else 1)
+    df['visitor_recognition_type_encoded'] = df['visitor_recognition_type'].apply(encode_recognition_type)
 
     return df
 
@@ -69,7 +83,13 @@ def preprocess_data(df):
     Returns:
         tuple: X (features), y (target), LabelEncoder for target.
     """
-    X = pd.get_dummies(data=df[['country_by_ip_address', 'region_by_ip_address', 'url_length', 'url_type', 'referrer_present', 'visitor_recognition_type_encoded']], drop_first=True)
+    X = pd.get_dummies(
+    data=df[['country_by_ip_address', 'region_by_ip_address', 
+             'url_length', 'url_type', 'referrer_present', 
+             'visitor_recognition_type_encoded']],
+    drop_first=True
+    )
+
     y = df['ua_agent_class']
     le_target = LabelEncoder()
     y = le_target.fit_transform(y)

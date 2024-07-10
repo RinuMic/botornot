@@ -1,12 +1,15 @@
 # deploy.py
 
-from flask import Flask, request, jsonify
+import logging
+import time
 import pandas as pd
 import joblib
-from flasgger import Swagger, swag_from
-import logging
+
+from flask import Flask, request, jsonify
 from flask_caching import Cache
-import time
+from flasgger import Swagger, swag_from
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+
 
 
 app = Flask(__name__)
@@ -36,6 +39,18 @@ NUM_FEATURES = len(columns_list)
 
 swagger = Swagger(app)
 
+def determine_url_type(url):
+    if '/p/' in url:
+        return 'product'
+    elif '/l/' in url:
+        return 'category'
+    else:
+        return 'other'
+
+def encode_recognition_type(type):
+    encoding_map = {'': 0, 'ANONYMOUS': 1, 'LOGGEDIN': 2, 'RECOGNIZED': 3}
+    return encoding_map.get(type, -1)  # Handle unexpected values gracefully
+
 # Function to preprocess input data
 def preprocess_input(data):
     """
@@ -50,13 +65,17 @@ def preprocess_input(data):
     Raises:
         ValueError: If there is a mismatch in the number of features.
     """
+    # Initialize new_data with None or an empty DataFrame
+    new_data = None
+
     if not isinstance(data, pd.DataFrame):
         new_data = pd.DataFrame(data, index=[0])
 
+
     new_data['url_length'] = new_data['url_without_parameters'].apply(lambda url: len(url))
-    new_data['url_type'] = new_data['url_without_parameters'].apply(lambda url: 'product' if '/p/' in url else ('category' if '/l/' in url else 'other'))
+    new_data['url_type'] = new_data['url_without_parameters'].apply(determine_url_type)
     new_data['referrer_present'] = new_data['referrer_without_parameters'].apply(lambda ref: 0 if pd.isnull(ref) or ref == '' else 1)
-    new_data['visitor_recognition_type_encoded'] = new_data['visitor_recognition_type'].map({'': 0, 'ANONYMOUS': 1, 'LOGGEDIN': 2, 'RECOGNIZED': 3})
+    new_data['visitor_recognition_type_encoded'] = new_data['visitor_recognition_type'].apply(encode_recognition_type)
 
     new_data = pd.get_dummies(data=new_data, columns=['country_by_ip_address', 'region_by_ip_address', 'url_type'], drop_first=True)
 
@@ -156,9 +175,17 @@ def predict():
 
         return jsonify({'prediction': predicted_labels.tolist()}), 200
     
+    except ValueError as ve:
+        app.logger.error(f'ValueError: {str(ve)}')
+        return jsonify({'error': str(ve)}), 400
+
+    except KeyError as ke:
+        app.logger.error(f'KeyError: {str(ke)}')
+        return jsonify({'error': 'KeyError: Missing expected key'}), 400
+
     except Exception as e:
-        app.logger.error(f'Prediction failed: {str(e)}')
-        return jsonify({'error': str(e)}), 400
+        app.logger.error(f'Unexpected error: {str(e)}')
+        return jsonify({'error': 'Unexpected error occurred'}), 500
     
 
 if __name__ == '__main__':

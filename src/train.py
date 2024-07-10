@@ -8,6 +8,18 @@ from xgboost import XGBClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 import joblib
 
+def determine_url_type(url):
+    if '/p/' in url:
+        return 'product'
+    elif '/l/' in url:
+        return 'category'
+    else:
+        return 'other'
+
+def encode_recognition_type(type):
+    encoding_map = {'': 0, 'ANONYMOUS': 1, 'LOGGEDIN': 2, 'RECOGNIZED': 3}
+    return encoding_map.get(type, -1)  # Handle unexpected values gracefully
+
 def preprocess_data(df):
     """
     Preprocesses the input DataFrame `df`.
@@ -30,15 +42,22 @@ def preprocess_data(df):
     df['ua_agent_class'] = df['ua_agent_class'].str.replace('Browser Webview', 'Browser')
     df['ua_agent_class'] = df['ua_agent_class'].str.replace('Robot Mobile', 'Robot')
     
-    # Feature engineering
+    # Feature engineering  
     df['url_length'] = df['url_without_parameters'].apply(lambda url: len(url))
-    df['url_type'] = df['url_without_parameters'].apply(lambda url: 'product' if '/p/' in url else ('category' if '/l/' in url else 'other'))
+    df['url_type'] = df['url_without_parameters'].apply(determine_url_type)
     df['referrer_present'] = df['referrer_without_parameters'].apply(lambda ref: 0 if pd.isnull(ref) or ref == '' else 1)
-    df['visitor_recognition_type_encoded'] = df['visitor_recognition_type'].map({'': 0, 'ANONYMOUS': 1, 'LOGGEDIN': 2, 'RECOGNIZED': 3})
-    
+    df['visitor_recognition_type_encoded'] = df['visitor_recognition_type'].apply(encode_recognition_type)
+
     # One-hot encoding for specified features
-    X = pd.get_dummies(data=df[['country_by_ip_address', 'region_by_ip_address', 'url_length', 'url_type', 'referrer_present', 'visitor_recognition_type_encoded']], drop_first=True)
-    
+    X = pd.get_dummies(
+    data=df[['country_by_ip_address', 'region_by_ip_address', 
+             'url_length', 'url_type', 'referrer_present', 
+             'visitor_recognition_type_encoded']],
+    drop_first=True
+)
+
+
+
     # Separate target variable
     y = df['ua_agent_class']
     
