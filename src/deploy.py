@@ -32,7 +32,6 @@ import joblib
 from flask import Flask, request, jsonify
 from flask_caching import Cache
 from flasgger import Swagger, swag_from
-from werkzeug.middleware.proxy_fix import ProxyFix
 from utils import encode_recognition_type, calculate_url_length, check_referrer_presence, determine_url_type
 
 app = Flask(__name__)

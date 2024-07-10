@@ -1,5 +1,16 @@
-# utils.py
+"""
+utils.py
 
+This module provides utility functions for preprocessing data, including functions
+for encoding visitor recognition types, calculating URL lengths, checking referrer
+presence, and determining URL types.
+
+Functions:
+- encode_recognition_type(rec_type): Encodes the visitor recognition type into numerical values.
+- calculate_url_length(url): Calculates the length of a URL.
+- check_referrer_presence(ref): Checks if the referrer is present.
+- determine_url_type(url): Determines the type of URL based on its structure.
+"""
 import pandas as pd
 
 def encode_recognition_type(rec_type):
