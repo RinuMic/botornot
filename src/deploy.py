@@ -23,11 +23,11 @@ Endpoints:
 - /predict: POST endpoint for making predictions using the deployed model.
 
 """
+import os
 import logging
 import time
 import pandas as pd
 import joblib
-import os
 
 from flask import Flask, request, jsonify
 from flask_caching import Cache
@@ -245,21 +245,5 @@ def predict():
         app.logger.error('Unexpected error: %s', str(e))
         return jsonify({'error': 'Unexpected error occurred'}), 500
 
-# if __name__ == '__main__':
-#     app.run(debug=True)
 if __name__ == '__main__':
-    # Run Flask with Gunicorn in production mode
-    app.wsgi_app = ProxyFix(app.wsgi_app)
-    
-    # Adjust workers and bind as per your requirements
-    bind_address = '0.0.0.0:8000'
-    workers = 4  # Adjust based on your CPU cores
-
-    # Command to start Gunicorn with your Flask app
-    cmd = f"gunicorn -w {workers} -b {bind_address} deploy:app"
-    
-    # Print the command to ensure it's correct
-    print(f"Starting Gunicorn with command: {cmd}")
-    
-    # Run the Gunicorn command
-    os.system(cmd)
+    app.run(debug=True)
