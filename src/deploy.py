@@ -3,13 +3,34 @@ import pandas as pd
 import joblib
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from flasgger import Swagger, swag_from
+import logging
+from flask_caching import Cache
+
 
 app = Flask(__name__)
 app.config.from_object(__name__)
 
+# Configure caching
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+# Configure logging for Flask-Caching
+cache_logger = logging.getLogger('flask_caching')
+cache_logger.setLevel(logging.INFO) 
+
+# Create a handler for console output
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+# Create a formatter and set it on the handler
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+
+# Add the handler to the logger
+cache_logger.addHandler(console_handler)
+
 # Load the pre-trained model, scaler, LabelEncoder for target, and encoders for categorical features
 # best_xgb, scaler, le_target, columns_list = joblib.load('nht_detection_model_with_label-final.pkl')
-model, scaler, le_target, columns_list = joblib.load('nht_detection_model_with_label-final.pkl')
+model, scaler, le_target, columns_list = joblib.load('../models/best_model.pkl')
 NUM_FEATURES = len(columns_list)
 
 swagger = Swagger(app)
@@ -104,10 +125,11 @@ def hello():
         }
     }
 })
+@cache.memoize(timeout=60)  # Cache results for 60 seconds
 def predict():
     try:
         input_data = request.json
-        print('INPUT_DATA:',input_data)
+        # print('INPUT_DATA:', input_data)
         # Perform preprocessing
         processed_data = preprocess_input(input_data)
         
@@ -119,6 +141,6 @@ def predict():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 400
-
+    
 if __name__ == '__main__':
     app.run(debug=True)
