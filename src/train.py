@@ -35,14 +35,13 @@ def preprocess_data(df):
         df (pd.DataFrame): The input DataFrame containing the raw data.
         
     Returns:
-        tuple: Processed feature matrix (X), target vector (y), and fitted LabelEncoder for the target.
+        tuple: Processed feature matrix (X), target vector (y), 
+        and fitted LabelEncoder for the target.
     """
     df = df.replace(np.nan, '', regex=True)
     df = df.replace('Unknown', '', regex=True)
-    
     df['ua_agent_class'] = df['ua_agent_class'].str.replace('Browser Webview', 'Browser')
     df['ua_agent_class'] = df['ua_agent_class'].str.replace('Robot Mobile', 'Robot')
-    
     df['url_length'] = df['url_without_parameters'].apply(lambda url: len(url))
     df['url_type'] = df['url_without_parameters'].apply(
         lambda url: 'product' if '/p/' in url else ('category' if '/l/' in url else 'other')
@@ -53,15 +52,12 @@ def preprocess_data(df):
     df['visitor_recognition_type_encoded'] = df['visitor_recognition_type'].map(
         {'': 0, 'ANONYMOUS': 1, 'LOGGEDIN': 2, 'RECOGNIZED': 3}
     )
-    
     X = pd.get_dummies(
         data=df[['country_by_ip_address', 'region_by_ip_address', 'url_length', 'url_type',
                  'referrer_present', 'visitor_recognition_type_encoded']],
         drop_first=True
     )
-    
     y = df['ua_agent_class']
-    
     le_target = LabelEncoder()
     y = le_target.fit_transform(y)
 
@@ -87,7 +83,6 @@ def train_model(X_train, y_train):
 
     grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=3, n_jobs=-1, verbose=2)
     grid_search.fit(X_train, y_train)
-    
     return grid_search.best_estimator_
 
 def evaluate_model(model, X_test, y_test, le_target):
@@ -101,15 +96,12 @@ def evaluate_model(model, X_test, y_test, le_target):
         le_target (LabelEncoder): The LabelEncoder fitted on the target variable.
     """
     y_pred = model.predict(X_test)
-    
     print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
     print("Classification Report:\n", classification_report(y_test, y_pred))
-    
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred, average='weighted')
     recall = recall_score(y_test, y_pred, average='weighted')
     f1 = f1_score(y_test, y_pred, average='weighted')
-    
     print(f"Accuracy: {accuracy:.4f}")
     print(f"Precision: {precision:.4f}")
     print(f"Recall: {recall:.4f}")
@@ -119,15 +111,10 @@ def evaluate_model(model, X_test, y_test, le_target):
 
 if __name__ == "__main__":
     df = pd.read_csv('../data/clickdata.csv')
-    
     X, y, le_target = preprocess_data(df)
-    
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
-    
     best_model = train_model(X_train, y_train)
-    
     evaluate_model(best_model, X_test, y_test, le_target)
