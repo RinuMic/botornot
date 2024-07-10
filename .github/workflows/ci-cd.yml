@@ -80,6 +80,11 @@ jobs:
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: |
-          heroku auth:token
+          # Install Heroku CLI
+          curl https://cli-assets.heroku.com/install.sh | sh
+          # Authenticate with Heroku
+          echo $HEROKU_API_KEY | heroku auth:token
+          # Add Heroku remote
           git remote add heroku https://git.heroku.com/<your-heroku-app>.git
+          # Push to Heroku
           git push heroku main

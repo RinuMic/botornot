@@ -5,6 +5,8 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from flasgger import Swagger, swag_from
 import logging
 from flask_caching import Cache
+import time
+
 
 
 app = Flask(__name__)
@@ -61,6 +63,7 @@ def preprocess_input(data):
 
     return new_data_scaled
 
+# Health Check Endpoint
 @app.route('/', methods=['GET'])
 def hello():
     """
@@ -72,6 +75,7 @@ def hello():
     """
     return 'NHT Detection API is working!'
 
+# Predict Endpoint
 @app.route('/predict', methods=['POST'])
 @swag_from({
     'summary': 'Predict NHT',
@@ -128,8 +132,8 @@ def hello():
 @cache.memoize(timeout=60)  # Cache results for 60 seconds
 def predict():
     try:
+        start_time = time.time()
         input_data = request.json
-        # print('INPUT_DATA:', input_data)
         # Perform preprocessing
         processed_data = preprocess_input(input_data)
         
@@ -137,10 +141,18 @@ def predict():
         prediction = model.predict(processed_data)
         predicted_labels = le_target.inverse_transform([prediction])
         
+        # Calculate elapsed time
+        elapsed_time = time.time() - start_time
+
+        # Log performance metrics
+        app.logger.info(f'Request processed in {elapsed_time:.4f} seconds')
+
         return jsonify({'prediction': predicted_labels.tolist()}), 200
     
     except Exception as e:
+        app.logger.error(f'Prediction failed: {str(e)}')
         return jsonify({'error': str(e)}), 400
     
+
 if __name__ == '__main__':
     app.run(debug=True)
