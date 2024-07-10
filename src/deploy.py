@@ -14,7 +14,6 @@ Dependencies:
 - flask (Flask, request, jsonify)
 - flask_caching (Cache)
 - flasgger (Swagger, swag_from)
-- sklearn.preprocessing (StandardScaler, LabelEncoder)
 
 Usage:
 Start the Flask server by running this script:
@@ -70,24 +69,32 @@ def determine_url_type(url):
     """
     if '/p/' in url:
         return 'product'
-    elif '/l/' in url:
+    if '/l/' in url:
         return 'category'
-    else:
-        return 'other'
+    return 'other'
 
-def encode_recognition_type(type):
+def encode_recognition_type(rec_type):
     """
     Encodes the visitor recognition type into numerical values.
     Args:
-        type (str): The visitor recognition type.
+        rec_type (str): The visitor recognition type.
     Returns:
         int: Encoded value corresponding to the type, or -1 if type is not found in encoding_map.
     """
     encoding_map = {'': 0, 'ANONYMOUS': 1, 'LOGGEDIN': 2, 'RECOGNIZED': 3}
-    return encoding_map.get(type, -1)  # Handle unexpected values gracefully
+    return encoding_map.get(rec_type, -1)  # Handle unexpected values gracefully
 
 # Assuming new_data['url_without_parameters'] contains URLs as strings
 def calculate_url_length(url):
+    """
+    Calculates the length of the URL.
+    
+    Args:
+        url (str): The URL string.
+        
+    Returns:
+        int: Length of the URL.
+    """
     return len(url)
 
 def check_referrer_presence(ref):
@@ -105,8 +112,7 @@ def check_referrer_presence(ref):
     """
     if pd.isnull(ref) or ref == '':
         return 0
-    else:
-        return 1
+    return 1
 
 # Function to preprocess input data
 def preprocess_input(data):
@@ -219,16 +225,16 @@ def predict():
         prediction = model.predict(processed_data)
         predicted_labels = le_target.inverse_transform([prediction])
         elapsed_time = time.time() - start_time
-        app.logger.info(f'Request processed in {elapsed_time:.4f} seconds')
+        app.logger.info('Request processed in %.4f seconds', elapsed_time)
         return jsonify({'prediction': predicted_labels.tolist()}), 200
     except ValueError as ve:
-        app.logger.error(f'ValueError: {str(ve)}')
+        app.logger.error('ValueError: %s', str(ve))
         return jsonify({'error': str(ve)}), 400
     except KeyError as ke:
-        app.logger.error(f'KeyError: {str(ke)}')
+        app.logger.error('KeyError: %s', str(ke))
         return jsonify({'error': 'KeyError: Missing expected key'}), 400
     except Exception as e:
-        app.logger.error(f'Unexpected error: {str(e)}')
+        app.logger.error('Unexpected error: %s', str(e))
         return jsonify({'error': 'Unexpected error occurred'}), 500
 
 if __name__ == '__main__':
