@@ -27,6 +27,7 @@ import logging
 import time
 import pandas as pd
 import joblib
+import os
 
 from flask import Flask, request, jsonify
 from flask_caching import Cache
@@ -53,8 +54,14 @@ console_handler.setFormatter(formatter)
 # Add the handler to the logger
 cache_logger.addHandler(console_handler)
 
+# Get the absolute path to the directory containing this script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Adjust the path to load the model relative to the current script location
+model_file = os.path.join(current_dir, '../models/best_model.pkl')
 # Load the pre-trained model, scaler, LabelEncoder for target, and encoders for categorical features
-model, scaler, le_target, columns_list = joblib.load('../models/best_model.pkl')
+# model, scaler, le_target, columns_list = joblib.load('../models/best_model.pkl')
+model, scaler, le_target, columns_list = joblib.load(model_file)
 NUM_FEATURES = len(columns_list)
 
 swagger = Swagger(app)
