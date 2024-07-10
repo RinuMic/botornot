@@ -85,15 +85,18 @@ def train_model(X_train, y_train):
     grid_search.fit(X_train, y_train)
     return grid_search.best_estimator_
 
-def evaluate_model(model, X_test, y_test, le_target):
+def evaluate_model(model, X_test, y_test, le_target, scaler, X_columns):
     """
     Evaluates the trained model and prints the evaluation metrics.
+    Saves the model, scaler, target encoder, and column names to a joblib file.
     
     Args:
         model (XGBClassifier): The trained model.
         X_test (np.ndarray): The test feature matrix.
         y_test (np.ndarray): The test target vector.
         le_target (LabelEncoder): The LabelEncoder fitted on the target variable.
+        scaler (StandardScaler): The fitted StandardScaler instance.
+        X_columns (list): List of column names used in the feature matrix X.
     """
     y_pred = model.predict(X_test)
     print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
@@ -107,7 +110,7 @@ def evaluate_model(model, X_test, y_test, le_target):
     print(f"Recall: {recall:.4f}")
     print(f"F1 Score: {f1:.4f}")
 
-    joblib.dump((model, scaler, le_target, X.columns.tolist()), '../models/best_model.pkl')
+    joblib.dump((model, scaler, le_target, X_columns), '../models/best_model.pkl')
 
 if __name__ == "__main__":
     df = pd.read_csv('../data/clickdata.csv')
@@ -117,4 +120,4 @@ if __name__ == "__main__":
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
     best_model = train_model(X_train, y_train)
-    evaluate_model(best_model, X_test, y_test, le_target)
+    evaluate_model(best_model, X_test, y_test, le_target, scaler, X.columns.tolist())
