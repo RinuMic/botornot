@@ -9,6 +9,19 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 import joblib
 
 def preprocess_data(df):
+    """
+    Preprocesses the input DataFrame `df`.
+    
+    Performs data cleaning, feature engineering, and encoding.
+    
+    Args:
+        df (pd.DataFrame): Input DataFrame containing raw data.
+        
+    Returns:
+        X (pd.DataFrame): Processed feature matrix.
+        y (np.ndarray): Encoded target labels.
+        le_target (LabelEncoder): LabelEncoder object fitted on target labels.
+    """
     # Apply preprocessing on the data
     df = df.replace(np.nan, '', regex=True)
     df = df.replace('Unknown', '', regex=True)
@@ -36,6 +49,16 @@ def preprocess_data(df):
     return X, y, le_target
 
 def train_model(X_train, y_train):
+    """
+    Trains an XGBoost classifier using Grid Search for hyperparameter tuning.
+    
+    Args:
+        X_train (pd.DataFrame): Training features.
+        y_train (np.ndarray): Training target labels.
+        
+    Returns:
+        best_model (XGBClassifier): Best trained XGBoost model.
+    """
     # Define the model and hyperparameter grid
     model = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', random_state=42)
     param_grid = {
@@ -51,6 +74,15 @@ def train_model(X_train, y_train):
     return grid_search.best_estimator_
 
 def evaluate_model(model, X_test, y_test, le_target):
+    """
+    Evaluates the trained model on the test data and prints evaluation metrics.
+    
+    Args:
+        model (XGBClassifier): Trained XGBoost model.
+        X_test (pd.DataFrame): Test features.
+        y_test (np.ndarray): Test target labels.
+        le_target (LabelEncoder): LabelEncoder object used to encode target labels.
+    """
     y_pred = model.predict(X_test)
     
     # Generate evaluation metrics
