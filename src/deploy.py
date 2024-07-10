@@ -1,5 +1,29 @@
-# deploy.py
+"""
+Module: deploy.py
 
+This script sets up a Flask web server to deploy a machine learning model. It includes
+endpoints for model prediction based on incoming requests. The model is loaded using joblib,
+and data preprocessing is handled using StandardScaler and LabelEncoder from scikit-learn.
+Caching is implemented using Flask-Caching for improved performance.
+
+Dependencies:
+- logging
+- time
+- pandas
+- joblib
+- flask (Flask, request, jsonify)
+- flask_caching (Cache)
+- flasgger (Swagger, swag_from)
+- sklearn.preprocessing (StandardScaler, LabelEncoder)
+
+Usage:
+Start the Flask server by running this script:
+    $ python deploy.py
+
+Endpoints:
+- /predict: POST endpoint for making predictions using the deployed model.
+
+"""
 import logging
 import time
 import pandas as pd
@@ -8,9 +32,6 @@ import joblib
 from flask import Flask, request, jsonify
 from flask_caching import Cache
 from flasgger import Swagger, swag_from
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-
-
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -40,6 +61,13 @@ NUM_FEATURES = len(columns_list)
 swagger = Swagger(app)
 
 def determine_url_type(url):
+    """
+    Determines the type of URL based on its structure.
+    Args:
+        url (str): The URL to analyze.
+    Returns:
+        str: 'product' if '/p/' is in the URL, 'category' if '/l/' is in the URL, otherwise 'other'.
+    """
     if '/p/' in url:
         return 'product'
     elif '/l/' in url:
@@ -48,8 +76,37 @@ def determine_url_type(url):
         return 'other'
 
 def encode_recognition_type(type):
+    """
+    Encodes the visitor recognition type into numerical values.
+    Args:
+        type (str): The visitor recognition type.
+    Returns:
+        int: Encoded value corresponding to the type, or -1 if type is not found in encoding_map.
+    """
     encoding_map = {'': 0, 'ANONYMOUS': 1, 'LOGGEDIN': 2, 'RECOGNIZED': 3}
     return encoding_map.get(type, -1)  # Handle unexpected values gracefully
+
+# Assuming new_data['url_without_parameters'] contains URLs as strings
+def calculate_url_length(url):
+    return len(url)
+
+def check_referrer_presence(ref):
+    """
+    Check if the referrer is present.
+
+    This function checks if the provided referrer string is null or empty,
+    and returns 0 if it is, otherwise returns 1.
+
+    Args:
+        ref (str or None): The referrer string to check.
+
+    Returns:
+        int: 0 if referrer is null or empty, otherwise 1.
+    """
+    if pd.isnull(ref) or ref == '':
+        return 0
+    else:
+        return 1
 
 # Function to preprocess input data
 def preprocess_input(data):
@@ -67,22 +124,16 @@ def preprocess_input(data):
     """
     # Initialize new_data with None or an empty DataFrame
     new_data = None
-
     if not isinstance(data, pd.DataFrame):
         new_data = pd.DataFrame(data, index=[0])
 
-
-    new_data['url_length'] = new_data['url_without_parameters'].apply(lambda url: len(url))
+    new_data['url_length'] = new_data['url_without_parameters'].apply(calculate_url_length)
     new_data['url_type'] = new_data['url_without_parameters'].apply(determine_url_type)
-    new_data['referrer_present'] = new_data['referrer_without_parameters'].apply(lambda ref: 0 if pd.isnull(ref) or ref == '' else 1)
+    new_data['referrer_present'] = new_data['referrer_without_parameters'].apply(check_referrer_presence)
     new_data['visitor_recognition_type_encoded'] = new_data['visitor_recognition_type'].apply(encode_recognition_type)
-
     new_data = pd.get_dummies(data=new_data, columns=['country_by_ip_address', 'region_by_ip_address', 'url_type'], drop_first=True)
-
     new_data = new_data.reindex(columns=columns_list, fill_value=0)
-
     new_data_scaled = scaler.transform(new_data)
-
     if new_data_scaled.shape[1] != NUM_FEATURES:
         raise ValueError(f"Feature shape mismatch, expected: {NUM_FEATURES}, got: {data.shape[1]}")
 
@@ -165,28 +216,20 @@ def predict():
         start_time = time.time()
         input_data = request.json
         processed_data = preprocess_input(input_data)
-        
         prediction = model.predict(processed_data)
         predicted_labels = le_target.inverse_transform([prediction])
-        
         elapsed_time = time.time() - start_time
-
         app.logger.info(f'Request processed in {elapsed_time:.4f} seconds')
-
         return jsonify({'prediction': predicted_labels.tolist()}), 200
-    
     except ValueError as ve:
         app.logger.error(f'ValueError: {str(ve)}')
         return jsonify({'error': str(ve)}), 400
-
     except KeyError as ke:
         app.logger.error(f'KeyError: {str(ke)}')
         return jsonify({'error': 'KeyError: Missing expected key'}), 400
-
     except Exception as e:
         app.logger.error(f'Unexpected error: {str(e)}')
         return jsonify({'error': 'Unexpected error occurred'}), 500
-    
 
 if __name__ == '__main__':
     app.run(debug=True)
