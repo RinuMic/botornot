@@ -31,5 +31,5 @@ jobs:
       - name: Lint code
         run: |
           pip install pylint
-          pylint **/*.py
+          pylint **/*.py --fail-under 5 --fail-on E
           
