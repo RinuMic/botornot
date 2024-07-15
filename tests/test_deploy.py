@@ -1,3 +1,7 @@
+"""
+Tests for deployment module using pytest.
+"""
+
 import pytest
 import json
 from deploy import app
@@ -49,7 +53,7 @@ def test_predict_endpoint_invalid_input(client):
 
 def test_predict_endpoint_unexpected_error(client, monkeypatch):
     def mock_preprocess_input(data):
-        raise Exception("Mock unexpected error")
+        raise ValueError("Mock unexpected error")
     
     monkeypatch.setattr('deploy.preprocess_input', mock_preprocess_input)
     
