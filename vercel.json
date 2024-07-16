@@ -8,8 +8,8 @@
     ],
     "routes": [
         {
-            "src": "/(.*)",
-            "dest": "/"
+            "src": "/predict",
+            "dest": "./src/deploy.py"
         }
     ]
 }
