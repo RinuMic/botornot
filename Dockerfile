@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 5000
 
 # Define environment variables
-ENV FLASK_APP=src.app.py
+ENV FLASK_APP=src.deploy:app
 ENV FLASK_RUN_HOST=0.0.0.0
 
-# Run app.py when the container launches
-CMD ["flask", "run"]
+# Run the app using gunicorn when the container launches
+CMD ["gunicorn", "-b", "0.0.0.0:$PORT", "src.deploy:app"]
