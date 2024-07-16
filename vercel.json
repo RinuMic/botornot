@@ -7,9 +7,10 @@
         }
     ],
     "routes": [
-        {
-            "src": "/predict",
-            "dest": "./src/deploy.py"
-        }
-    ]
+    { "handle": "filesystem" },
+    {
+      "src": "/predict",
+      "dest": "/src/deploy.py"
+    }
+  ]
 }
