@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Module: deploy.py
 
