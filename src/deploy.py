@@ -24,6 +24,7 @@ Endpoints:
 - /predict: POST endpoint for making predictions using the deployed model.
 
 """
+import sys
 import os
 import logging
 import time
@@ -33,6 +34,8 @@ import joblib
 from flask import Flask, request, jsonify
 from flask_caching import Cache
 from flasgger import Swagger, swag_from
+# Add the src directory to the Python path
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from utils import encode_recognition_type, calculate_url_length, check_referrer_presence, determine_url_type
 
 app = Flask(__name__)
