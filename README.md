@@ -19,7 +19,7 @@
 ```bash
 git clone https://github.com/yourusername/botornot.git
 cd botornot
-
+```
 ## Setup Instructions
 
 ### Create and Activate a Virtual Environment
@@ -29,11 +29,28 @@ source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 
 ### install Dependencies
 pip install -r requirements.txt
-
-Model and Data Files
+```
+### Model and Data Files
 Place the best_model.pkl file in the models directory if not present already
 
 ### Run Flask Application
 ``` bash
 python deploy.py
+```
 The application will start and be accessible at http://localhost:5000.
+
+### Performance Optimization
+Caching has been implemented using Flask-Caching to improve response times and reduce server load by storing the results of predictions for repeated requests.
+
+### Technical Performance
+The application logs the time taken to process each request, providing insight into the performance of the model and the API.
+
+### Deployment
+The application is deployed on Render
+
+### API Documentation
+Swagger UI is available at http://localhost:5000/api_docs for interactive API documentation and testing.
+
+### License
+This project is licensed under the MIT License.
+
