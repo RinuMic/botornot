@@ -37,6 +37,7 @@ Ensure that the best_model.pkl file is in the models directory.
 
 ### Run Flask Application
 ``` bash
+cd src
 python deploy.py
 ```
 The application will start and be accessible at http://127.0.0.1:5000.
