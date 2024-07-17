@@ -26,3 +26,14 @@ cd botornot
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+
+### install Dependencies
+pip install -r requirements.txt
+
+Model and Data Files
+Place the best_model.pkl file in the models directory if not present already
+
+### Run Flask Application
+``` bash
+python deploy.py
+The application will start and be accessible at http://localhost:5000.
