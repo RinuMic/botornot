@@ -50,5 +50,3 @@ The application logs the time taken to process each request, providing insight i
 
 ### API Documentation
 Swagger UI is available at http://127.0.0.1:5000/apidocs for interactive API documentation and testing.
-
-
