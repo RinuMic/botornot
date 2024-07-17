@@ -30,8 +30,10 @@ source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 ### install Dependencies
 pip install -r requirements.txt
 ```
+
+## Test Model
 ### Model and Data Files
-Place the best_model.pkl file in the models directory if not present already
+Ensure that the best_model.pkl file is in the models directory.
 
 ### Run Flask Application
 ``` bash
@@ -44,9 +46,6 @@ Caching has been implemented using Flask-Caching to improve response times and r
 
 ### Technical Performance
 The application logs the time taken to process each request, providing insight into the performance of the model and the API.
-
-### Deployment
-The application is deployed on Render
 
 ### API Documentation
 Swagger UI is available at http://localhost:5000/api_docs for interactive API documentation and testing.
