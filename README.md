@@ -80,6 +80,7 @@ Ensure that the clickdata.csv file is in the data directory.
 cd src/
 python train.py
 ```
+New model will get saved inside data folder
 
 ### Performance Optimization
 Caching has been implemented using Flask-Caching to improve response times and reduce server load by storing the results of predictions for repeated requests.
