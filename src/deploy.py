@@ -29,11 +29,13 @@ import os
 import logging
 import time
 import pandas as pd
+import numpy as np
 import joblib
 
 from flask import Flask, request, jsonify
 from flask_caching import Cache
 from flasgger import Swagger, swag_from
+
 # Add the src directory to the Python path
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from utils import encode_recognition_type, calculate_url_length, check_referrer_presence, determine_url_type
@@ -65,8 +67,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 # Adjust the path to load the model relative to the current script location
 model_file = os.path.join(current_dir, '../models/best_model.pkl')
 # Load the pre-trained model, scaler, LabelEncoder for target, and encoders for categorical features
-# model, scaler, le_target, columns_list = joblib.load('../models/best_model.pkl')
-model, scaler, le_target, columns_list = joblib.load(model_file)
+model, scaler, le_target, le_region, le_country, columns_list = joblib.load(model_file)
 NUM_FEATURES = len(columns_list)
 
 swagger = Swagger(app)
@@ -94,11 +95,24 @@ def preprocess_input(data):
     new_data['url_type'] = new_data['url_without_parameters'].apply(determine_url_type)
     new_data['referrer_present'] = new_data['referrer_without_parameters'].apply(check_referrer_presence)
     new_data['visitor_recognition_type_encoded'] = new_data['visitor_recognition_type'].apply(encode_recognition_type)
-    new_data = pd.get_dummies(data=new_data, columns=['country_by_ip_address', 'region_by_ip_address', 'url_type'], drop_first=True)
+    new_data['url_type'] = new_data['url_type'].astype('category').cat.codes
+
+    # Handling unseen labels
+    def safe_transform(label_encoder, data):
+        seen_classes = set(label_encoder.classes_)
+        return [label_encoder.transform([x])[0] if x in seen_classes else -1 for x in data]
+
+    new_data['region_numeric'] = safe_transform(le_region, new_data['region_by_ip_address'])
+    new_data['country_numeric'] = safe_transform(le_country, new_data['country_by_ip_address'])
+
+    # Reindex to match model's expected feature columns
     new_data = new_data.reindex(columns=columns_list, fill_value=0)
+    print('new_data:',new_data)
+    # Scale the features
     new_data_scaled = scaler.transform(new_data)
+
     if new_data_scaled.shape[1] != NUM_FEATURES:
-        raise ValueError(f"Feature shape mismatch, expected: {NUM_FEATURES}, got: {data.shape[1]}")
+        raise ValueError(f"Feature shape mismatch, expected: {NUM_FEATURES}, got: {new_data_scaled.shape[1]}")
 
     return new_data_scaled
 
@@ -167,7 +181,7 @@ def hello():
         }
     }
 })
-@cache.memoize(timeout=60)  # Cache results for 60 seconds
+@cache.memoize(timeout=5)  # Cache results for 5 seconds
 def predict():
     """
     Endpoint to predict if the input data is NHT or not.
@@ -179,8 +193,11 @@ def predict():
         start_time = time.time()
         input_data = request.json
         processed_data = preprocess_input(input_data)
+        print('processed_data:',processed_data)
         prediction = model.predict(processed_data)
-        predicted_labels = le_target.inverse_transform([prediction])
+        print('prediction:',prediction)
+        predicted_labels = le_target.inverse_transform(prediction)
+        print('predicted_labels:',predicted_labels)
         elapsed_time = time.time() - start_time
         app.logger.info('Request processed in %.4f seconds', elapsed_time)
         return jsonify({'prediction': predicted_labels.tolist()}), 200
