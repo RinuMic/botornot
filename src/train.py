@@ -21,9 +21,9 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from imblearn.under_sampling import RandomUnderSampler
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import GridSearchCV
-from imblearn.under_sampling import RandomUnderSampler
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.model_selection import cross_val_score
@@ -31,36 +31,36 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 import joblib
 from utils import encode_recognition_type, calculate_url_length, check_referrer_presence, determine_url_type
 
-def data_exploration(df):
+def data_exploration(df_data):
     # Basic Statistics
     print("Basic Statistics:")
-    print(df.describe(include='all'))
+    print(df_data.describe(include='all'))
     # Data Types and Memory Usage
     print("\nData Types:")
-    print(df.dtypes)
+    print(df_data.dtypes)
     print("\nMemory Usage:")
-    print(df.memory_usage(deep=True))
+    print(df_data.memory_usage(deep=True))
     # Missing Values Analysis
     print("\nMissing Values:")
-    missing_values = df.isnull().sum()
+    missing_values = df_data.isnull().sum()
     print(missing_values[missing_values > 0])
     print("\nPercentage of Missing Values:")
-    missing_percentage = (df.isnull().mean() * 100).round(2)
+    missing_percentage = (df_data.isnull().mean() * 100).round(2)
     print(missing_percentage[missing_percentage > 0])
     # Visualizing Missing Values
     plt.figure(figsize=(12, 6))
-    sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
+    sns.heatmap(df_data.isnull(), cbar=False, cmap='viridis')
     plt.title("Missing Values Heatmap")
     plt.show()
     # Value Counts for Categorical Features
-    categorical_columns = df.select_dtypes(include=['object', 'category']).columns
+    categorical_columns = df_data.select_dtypes(include=['object', 'category']).columns
     for column in categorical_columns:
         print(f"\nValue Counts for {column}:")
-        print(df[column].value_counts())
+        print(df_data[column].value_counts())
     # Unique Values Check
     unique_values = {}
-    for column in df.columns:
-        unique_values[column] = df[column].nunique()
+    for column in df_data.columns:
+        unique_values[column] = df_data[column].nunique()
     print("\nNumber of Unique Values per Column:")
     print(unique_values)
 
@@ -162,12 +162,12 @@ def preprocess_data(df, le_region=None, le_country=None):
     return x, y, le_target, le_region, le_country
 
 
-def train_model(X_train, y_train):
+def train_model(x_train_data, y_train_data):
     """
     Trains multiple models and performs grid search for hyperparameter tuning.
     Args:
-        X_train (pd.DataFrame): Training features.
-        y_train (pd.Series): Training target. 
+        x_train_data (pd.DataFrame): Training features.
+        y_train_data (pd.Series): Training target. 
     Returns:
         dict: Dictionary containing the best estimator for each model.
     """
@@ -193,17 +193,17 @@ def train_model(X_train, y_train):
         # Define the undersampler
         undersampler = RandomUnderSampler(sampling_strategy='majority', random_state=42)
         # Resample the training data
-        X_train_resampled, y_train_resampled = undersampler.fit_resample(X_train, y_train)
+        x_train_resampled, _data_resampled = undersampler.fit_resample(x_train_data, y_train_data)
         # Perform GridSearchCV
         grid_search = GridSearchCV(estimator=classifiers[clf_name], param_grid=param_grids[clf_name], cv=3, n_jobs=-1, verbose=2)
-        grid_search.fit(X_train_resampled, y_train_resampled)
+        grid_search.fit(x_train_resampled, _data_resampled)
         # Store the best estimator
         best_estimators[clf_name] = grid_search.best_estimator_
         print(f"Best Parameters for {clf_name}: {grid_search.best_params_}")
 
     return best_estimators[clf_name]
 
-def evaluate_model(model, x_test_data, y_test_data, le_target_model, le_region_model, le_country_model, scaler_val, x_columns):
+def evaluate_model(model, x_test_data, y_test_data, le_target_model, le_region_model, le_country_model, scaler_val, x_columns,x_train, y_train):
     """
     Evaluates the trained model and prints the evaluation metrics.
     Saves the model, scaler, target encoder, and column names to a joblib file.
@@ -242,18 +242,18 @@ def evaluate_model(model, x_test_data, y_test_data, le_target_model, le_region_m
     for f in range(len(feature_names)):
         print(f"{f + 1}. Feature '{feature_names[indices[f]]}' ({importances[indices[f]]:.4f})")
     # Step 4: Cross-validation Scores
-    scores = cross_val_score(model, x_train, y_train, cv=5, scoring='accuracy')  # Assuming x_train and y_train are defined
+    scores = cross_val_score(model, x_train, y_train, cv=5, scoring='accuracy')  
     print(f"Cross-validation scores: {scores}")
     print(f"Mean cross-validation score: {scores.mean()}")
 
 if __name__ == "__main__":
-    df = pd.read_csv('../data/clickdata.csv')
+    data_df = pd.read_csv('../data/clickdata.csv')
     # Preprocess the data
-    x, y, le_target, le_region, le_country = preprocess_data(df)
+    x, y, le_target, le_region, le_country = preprocess_data(data_df)
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train)
     x_test = scaler.transform(x_test)
     best_model = train_model(x_train, y_train)
-    evaluate_model(best_model, x_test, y_test, le_target,le_region, le_country, scaler, x.columns.tolist())
+    evaluate_model(best_model, x_test, y_test, le_target,le_region, le_country, scaler, x.columns.tolist(),x_train, y_train)
     

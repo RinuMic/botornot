@@ -31,14 +31,12 @@ import time
 import pandas as pd
 import numpy as np
 import joblib
-
-from flask import Flask, request, jsonify
-from flask_caching import Cache
-from flasgger import Swagger, swag_from
-
 # Add the src directory to the Python path
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from utils import encode_recognition_type, calculate_url_length, check_referrer_presence, determine_url_type
+from flask import Flask, request, jsonify
+from flask_caching import Cache
+from flasgger import Swagger, swag_from
 
 app = Flask(__name__)
 app.config.from_object(__name__)
