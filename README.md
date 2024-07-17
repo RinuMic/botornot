@@ -64,11 +64,12 @@ The application will start and be accessible at http://127.0.0.1:5000.
       "referrer_without_parameters": "",
       "visitor_recognition_type": "ANONYMOUS"
   }
-```
+
 - **Response:**
 {
     "prediction": ["HT"]  # Example response
 }
+```
 ```
 ## Train new model
 
