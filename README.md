@@ -65,9 +65,7 @@ The application will start and be accessible at http://127.0.0.1:5000.
       "visitor_recognition_type": "ANONYMOUS"
   }
 ```
-```
 - **Response:**
-  ```json
 {
     "prediction": ["HT"]  # Example response
 }
