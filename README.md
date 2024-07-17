@@ -39,7 +39,7 @@ Ensure that the best_model.pkl file is in the models directory.
 ``` bash
 python deploy.py
 ```
-The application will start and be accessible at http://localhost:5000.
+The application will start and be accessible at http://127.0.0.1:5000.
 
 ### Performance Optimization
 Caching has been implemented using Flask-Caching to improve response times and reduce server load by storing the results of predictions for repeated requests.
@@ -48,7 +48,7 @@ Caching has been implemented using Flask-Caching to improve response times and r
 The application logs the time taken to process each request, providing insight into the performance of the model and the API.
 
 ### API Documentation
-Swagger UI is available at http://localhost:5000/api_docs for interactive API documentation and testing.
+Swagger UI is available at http://127.0.0.1:5000/apidocs for interactive API documentation and testing.
 
 ### License
 This project is licensed under the MIT License.
