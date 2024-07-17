@@ -66,11 +66,12 @@ The application will start and be accessible at http://127.0.0.1:5000.
   }
 
 - **Response:**
+```json
 {
     "prediction": ["HT"]  # Example response
 }
 ```
-```
+
 ## Train new model
 
 ### Data Files
