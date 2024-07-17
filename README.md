@@ -42,34 +42,35 @@ python deploy.py
 ```
 The application will start and be accessible at http://127.0.0.1:5000.
 
-### API Endpoints
+## API Endpoints
 
-#### Health Check
-URL: /
-Method: GET
-Description: Returns a status message indicating the API is working.
+### Health Check
+- **URL:** `/`
+- **Method:** `GET`
+- **Description:** Returns a status message indicating the API is working.
 
-#### Predict
-URL: /predict
-Method: POST
-Description: Predicts if the input data is from a bot or a human.
-Request Body: # Example request
-{
-    "session_id": "be73c8d1b836170a21529a1b23140f8e",
-    "epoch_ms": 1520280000000,
-    "country_by_ip_address": "US",
-    "region_by_ip_address": "CA",
-    "url_without_parameters": "https://www.bol.com/nl/l/nieuwe-actie-avontuur-over-prive-detective/N/33590+26931+7289/",
-    "referrer_without_parameters": "",
-    "visitor_recognition_type": "ANONYMOUS"
-}
-Response:
-json
-Copy code
+### Predict
+- **URL:** `/predict`
+- **Method:** `POST`
+- **Description:** Predicts if the input data is from a bot or a human.
+- **Request Body:**
+  ```json
+  {
+      "session_id": "be73c8d1b836170a21529a1b23140f8e",
+      "epoch_ms": 1520280000000,
+      "country_by_ip_address": "US",
+      "region_by_ip_address": "CA",
+      "url_without_parameters": "https://www.bol.com/nl/l/nieuwe-actie-avontuur-over-prive-detective/N/33590+26931+7289/",
+      "referrer_without_parameters": "",
+      "visitor_recognition_type": "ANONYMOUS"
+  }
+```
+- **Response:**
+  ```json
 {
     "prediction": ["HT"]  # Example response
 }
-
+```
 ## Train new model
 
 ### Data Files
