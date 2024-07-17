@@ -10,7 +10,7 @@
 - **Logging**: Logs the time taken to process each request for performance monitoring.
 
 ## Requirements
-- Python 3.8 or higher
+- Python 3.9
 - Required Python packages (listed in `requirements.txt`)
 
 ## Setup Instructions
